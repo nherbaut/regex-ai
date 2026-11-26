@@ -1,0 +1,87 @@
+{{ define "main" }}
+  <div class="actions-row no-print" style="margin-top: 0; margin-bottom: 1rem; justify-content: space-between;">
+    <a class="btn" href="./index.html">Retour au parcours étudiant</a>
+    <button type="button" class="btn btn-primary" onclick="window.print()">Imprimer cette feuille d'évaluation</button>
+  </div>
+
+  <article class="paper-sheet" aria-labelledby="h-paper">
+    <header style="border-bottom: 2px solid #1c2128; padding-bottom: 0.75rem; margin-bottom: 1rem;">
+      <h2 id="h-paper" style="margin: 0;">Évaluation autonome — Expressions régulières (7 minutes)</h2>
+      <p style="margin: 0.35rem 0 0;">
+        <strong>BUT Informatique — Semestre 1</strong> — Travail individuel, sans IA, sans aide-mémoire et sans documents.
+      </p>
+      <p style="margin: 0.6rem 0 0;">
+        Identifiant anonyme : ________________________ &nbsp;&nbsp;&nbsp;
+        Groupe : &#9744; A &nbsp; &#9744; B &nbsp; &#9744; C
+      </p>
+    </header>
+
+    <p style="font-size: 0.92rem;">
+      <strong>Rappel :</strong> écrivez uniquement le motif (sans délimiteurs <code>/.../</code> ni flags).
+      Les motifs doivent reconnaître la <strong>chaîne entière</strong> (correspondance complète, caractères ASCII).
+    </p>
+
+    <section style="margin-bottom: 1.25rem;">
+      <h3 style="margin-bottom: 0.35rem;">E1 — Production (/1)</h3>
+      <p style="margin-top: 0;">
+        Écrire une expression régulière qui reconnaît deux à quatre minuscules ASCII, un tiret, puis exactement trois chiffres.
+      </p>
+      <p style="font-size: 0.92rem; margin: 0.35rem 0;">
+        <strong>Acceptés :</strong> <code>ab-123</code>, <code>abcd-456</code> &nbsp;|&nbsp;
+        <strong>Refusés :</strong> <code>a-123</code>, <code>abc-12</code>, <code>abcde-123</code>
+      </p>
+      <p style="margin-bottom: 0.2rem;"><strong>Votre motif :</strong></p>
+      <div class="paper-line"></div>
+    </section>
+
+    <section style="margin-bottom: 1.25rem;">
+      <h3 style="margin-bottom: 0.35rem;">E2 — Compréhension (/1)</h3>
+      <p style="margin-top: 0;">
+        Pour l'expression régulière <code>[A-Z]{2}(-[0-9]+)?</code>, cochez pour chaque chaîne si elle est acceptée (Oui) ou refusée (Non) en correspondance complète.
+      </p>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Chaîne</th>
+            <th>Acceptée (Oui)</th>
+            <th>Refusée (Non)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><code>AB</code></td><td>&#9744; Oui</td><td>&#9744; Non</td></tr>
+          <tr><td><code>AB-123</code></td><td>&#9744; Oui</td><td>&#9744; Non</td></tr>
+          <tr><td><code>AB-</code></td><td>&#9744; Oui</td><td>&#9744; Non</td></tr>
+          <tr><td><code>ABC-12</code></td><td>&#9744; Oui</td><td>&#9744; Non</td></tr>
+          <tr><td><code>AB123</code></td><td>&#9744; Oui</td><td>&#9744; Non</td></tr>
+          <tr><td><code>XY-0</code></td><td>&#9744; Oui</td><td>&#9744; Non</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section style="margin-bottom: 1.25rem;">
+      <h3 style="margin-bottom: 0.35rem;">E3 — Correction et explication (/1 + explication séparée)</h3>
+      <p style="margin-top: 0;">
+        Le motif <code>GET|POST-[A-Z]{2}</code> doit reconnaître <code>GET</code> ou <code>POST</code> suivi d'un tiret
+        et de deux majuscules ASCII. Corrigez le motif et expliquez l'erreur présente dans l'expression initiale.
+      </p>
+      <p style="margin-bottom: 0.2rem;"><strong>1. Motif corrigé :</strong></p>
+      <div class="paper-line"></div>
+      <p style="margin-bottom: 0.2rem;"><strong>2. Explication de l'erreur :</strong></p>
+      <div class="paper-box"></div>
+    </section>
+
+    <section>
+      <h3 style="margin-bottom: 0.35rem;">E4 — Transfert (/1)</h3>
+      <p style="margin-top: 0;">
+        Écrire une expression régulière qui reconnaît <code>TCP</code> ou <code>UDP</code>, un tiret, deux à quatre chiffres,
+        puis éventuellement un tiret et deux majuscules ASCII.
+      </p>
+      <p style="font-size: 0.92rem; margin: 0.35rem 0;">
+        <strong>Acceptés :</strong> <code>TCP-123</code>, <code>UDP-42</code>, <code>TCP-1234-AB</code>, <code>UDP-99-XY</code> &nbsp;|&nbsp;
+        <strong>Refusés :</strong> <code>HTTP-123</code>, <code>UDP-1</code>, <code>TCP-123-ABC</code>, <code>UDP-99-</code>
+      </p>
+      <p style="margin-bottom: 0.2rem;"><strong>Votre motif :</strong></p>
+      <div class="paper-line"></div>
+    </section>
+  </article>
+{{ end }}

@@ -1,0 +1,418 @@
+{{ define "main" }}
+  <ol class="stepper" aria-label="Progression de la séance" id="stepper">
+    <li id="step-0" class="step-active">0. Accueil</li>
+    <li id="step-1">1. Apprentissage (7 min)</li>
+    <li id="step-2">2. Autoévaluation (1 min)</li>
+    <li id="step-3">3. Évaluation autonome (7 min)</li>
+    <li id="step-4">4. Remise</li>
+  </ol>
+
+  <section class="status-bar" aria-label="État de la session">
+    <div class="status-meta">
+      <span>Identifiant anonyme : <strong id="status-attempt-id">—</strong></span>
+      <span class="badge" id="status-group-badge">Groupe non choisi</span>
+      <span class="badge badge-accent" id="status-phase-badge">Étape 0 : Accueil</span>
+    </div>
+    <div class="actions-row" style="margin-top: 0;">
+      <div class="timer-box hidden" id="timer-box" role="timer" aria-live="off" aria-label="Temps restant">
+        <span id="timer-label">Temps restant :</span>
+        <span id="timer-display">07:00</span>
+      </div>
+      <button type="button" class="btn btn-small btn-danger" id="btn-reset-top">Réinitialiser</button>
+    </div>
+  </section>
+
+  <div id="global-announcement" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- PHASE 0 : ACCUEIL -->
+  <section id="phase-0" class="card" aria-labelledby="h-phase-0">
+    <h2 id="h-phase-0">0. Accueil et préparation</h2>
+    <p>
+      Cette activité dure <strong>15 minutes côté étudiant</strong> (7 min d'apprentissage, 1 min d'autoévaluation,
+      7 min d'évaluation autonome), suivies de <strong>5 minutes de restitution collective</strong> par l'enseignant.
+      Aucune donnée personnelle n'est collectée : votre parcours est identifié par un code anonyme stocké uniquement dans ce navigateur.
+    </p>
+
+    <div class="callout callout-info">
+      <strong>Votre identifiant anonyme local :</strong>
+      <code id="welcome-attempt-id">—</code>
+      <p class="help-text" style="margin-bottom: 0;">
+        Conservez cet identifiant jusqu'à la remise de votre fichier JSON en fin d'activité.
+      </p>
+    </div>
+
+    <form id="welcome-form" novalidate>
+      <fieldset class="scale-fieldset">
+        <legend>1. Votre familiarité préalable avec les expressions régulières (obligatoire)</legend>
+        <div class="radio-group" id="familiarity-radios">
+          <label class="radio-card">
+            <input type="radio" name="familiarity" value="jamais">
+            <span>Jamais utilisé</span>
+          </label>
+          <label class="radio-card">
+            <input type="radio" name="familiarity" value="notions">
+            <span>Quelques notions</span>
+          </label>
+          <label class="radio-card">
+            <input type="radio" name="familiarity" value="reguliere">
+            <span>Utilisation régulière</span>
+          </label>
+        </div>
+      </fieldset>
+
+      <fieldset class="scale-fieldset">
+        <legend>2. Votre groupe de travail (A, B ou C — obligatoire)</legend>
+        <p class="help-text" style="margin-top: 0;">
+          Saisissez le groupe attribué par l'enseignant. Si aucun groupe ne vous a été assigné à l'avance, vous pouvez utiliser
+          le tirage local facultatif ci-dessous (attention : un tirage local indépendant sur chaque poste ne garantit pas l'équilibre des effectifs entre groupes).
+        </p>
+        <div class="radio-group" id="group-radios">
+          <label class="radio-card">
+            <input type="radio" name="group" value="A">
+            <span>Groupe A</span>
+          </label>
+          <label class="radio-card">
+            <input type="radio" name="group" value="B">
+            <span>Groupe B</span>
+          </label>
+          <label class="radio-card">
+            <input type="radio" name="group" value="C">
+            <span>Groupe C</span>
+          </label>
+          <button type="button" class="btn btn-small" id="btn-random-group">Tirer un groupe au sort (local)</button>
+        </div>
+        <p class="help-text hidden" id="random-group-note" aria-live="polite"></p>
+      </fieldset>
+
+      <div id="group-rules-box" class="callout hidden" aria-live="polite">
+        <h3 id="group-rules-title" style="margin-top: 0;">Consignes de votre groupe</h3>
+        <p id="group-rules-text"></p>
+        <div id="group-c-welcome-prompt" class="hidden">
+          <p><strong>Prompt à copier-coller dans votre IA externe (Groupe C) :</strong></p>
+          <blockquote class="prompt-quote" id="welcome-prompt-quote"></blockquote>
+          <button type="button" class="btn btn-small" id="btn-copy-prompt-welcome">Copier le prompt</button>
+          <span class="help-text" id="copy-feedback-welcome" aria-live="polite"></span>
+        </div>
+        <p class="help-text" style="margin-bottom: 0;">
+          Pour tous les groupes : lors de la <strong>phase 3 (évaluation autonome)</strong>, toute aide (IA, documents, aide-mémoire) devra être fermée.
+        </p>
+      </div>
+
+      <div class="form-group">
+        <label class="radio-card" style="width: 100%;">
+          <input type="checkbox" id="confirm-rules">
+          <span>J'ai lu et compris les consignes propres à mon groupe et je suis prêt(e) à démarrer le chronomètre de 7 minutes.</span>
+        </label>
+      </div>
+
+      <div id="welcome-error" class="callout callout-err hidden" role="alert"></div>
+
+      <div class="actions-row">
+        <button type="submit" class="btn btn-primary" id="btn-start-phase1" disabled>
+          Démarrer la phase 1 — Apprentissage (7 min)
+        </button>
+        <a class="btn" href="./papier.html">Feuille papier imprimable (Phase 3)</a>
+      </div>
+    </form>
+  </section>
+
+  <!-- PHASE 1 : APPRENTISSAGE (7 MIN) -->
+  <section id="phase-1" class="hidden" aria-labelledby="h-phase-1">
+    <div class="callout callout-info" id="phase1-group-banner"></div>
+
+    <div class="callout hidden" id="phase1-group-c-box">
+      <strong>Rappel du prompt tuteur (Groupe C) :</strong>
+      <blockquote class="prompt-quote" id="phase1-prompt-quote"></blockquote>
+      <button type="button" class="btn btn-small" id="btn-copy-prompt-p1">Copier le prompt</button>
+      <span class="help-text" id="copy-feedback-p1" aria-live="polite"></span>
+    </div>
+
+    <div class="learning-layout" id="learning-layout">
+      <div class="card">
+        <h2 id="h-phase-1">1. Phase d'apprentissage (7 minutes)</h2>
+        <p class="help-text">
+          Saisissez uniquement le motif d'expression régulière, <strong>sans délimiteurs <code>/.../</code> ni flags</strong>.
+          La correspondance porte sur la <strong>chaîne entière</strong> (comme <code>re.fullmatch</code> en Python), sur caractères ASCII.
+          Vous pouvez passer d'un exercice à l'autre même sans l'avoir réussi.
+        </p>
+
+        <div class="exercise-tabs" role="tablist" aria-label="Exercices d'apprentissage" id="learning-tabs"></div>
+
+        <article aria-live="polite">
+          <h3 id="learning-exercise-title">Exercice</h3>
+          <p id="learning-exercise-prompt"></p>
+
+          <div class="examples-grid">
+            <div class="example-box">
+              <h4>Exemples à accepter</h4>
+              <ul class="example-list" id="learning-examples-accept"></ul>
+            </div>
+            <div class="example-box">
+              <h4>Exemples à refuser</h4>
+              <ul class="example-list" id="learning-examples-reject"></ul>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="learning-pattern-input">Votre expression régulière (motif uniquement) :</label>
+            <div class="input-row">
+              <input
+                type="text"
+                id="learning-pattern-input"
+                class="input-mono"
+                maxlength="200"
+                autocomplete="off"
+                autocorrect="off"
+                autocapitalize="off"
+                spellcheck="false"
+                placeholder="Saisissez uniquement le motif (sans /.../)"
+              >
+              <button type="button" class="btn btn-primary" id="btn-test-pattern">Tester</button>
+            </div>
+            <div class="help-text">
+              <span id="learning-char-count">0 / 200 caractères</span>
+              — <span id="learning-exercise-meta">Essais : 0</span>
+            </div>
+          </div>
+
+          <div id="learning-feedback" class="hidden" aria-live="polite"></div>
+        </article>
+
+        <div class="actions-row" style="justify-content: space-between; border-top: 1px solid var(--border); padding-top: 1rem;">
+          <div class="actions-row" style="margin-top: 0;">
+            <button type="button" class="btn" id="btn-prev-learning">Exercice précédent</button>
+            <button type="button" class="btn" id="btn-next-learning">Exercice suivant</button>
+          </div>
+          <button type="button" class="btn btn-primary" id="btn-finish-phase1">
+            Terminer la phase 1 et passer à l'autoévaluation
+          </button>
+        </div>
+      </div>
+
+      <!-- AIDE-MÉMOIRE : UNIQUEMENT POUR LE GROUPE B EN PHASE 1 -->
+      <aside id="cheatsheet-aside" class="card hidden" aria-labelledby="h-cheatsheet">
+        <h3 id="h-cheatsheet">Aide-mémoire — Expressions régulières (Groupe B)</h3>
+        <p class="help-text" style="margin-top: 0;">
+          Sous-ensemble commun au moteur JavaScript et à Python (<code>re.fullmatch</code>), sur caractères ASCII.
+        </p>
+        <table class="cheatsheet-table">
+          <thead>
+            <tr>
+              <th>Syntaxe</th>
+              <th>Rôle</th>
+              <th>Exemple élémentaire</th>
+            </tr>
+          </thead>
+          <tbody id="cheatsheet-tbody"></tbody>
+        </table>
+        <p class="help-text" style="margin-bottom: 0;">
+          <strong>Limites :</strong> la validation teste un ensemble fini de chaînes (exemples affichés et cas limites cachés).
+          Réussir tous les tests ne constitue pas une preuve formelle d'équivalence de deux langages réguliers.
+        </p>
+      </aside>
+    </div>
+  </section>
+
+  <!-- PHASE 2 : AUTOÉVALUATION (1 MIN) -->
+  <section id="phase-2" class="card hidden" aria-labelledby="h-phase-2">
+    <h2 id="h-phase-2">2. Autoévaluation (1 minute)</h2>
+    <p>
+      Avant de découvrir les exercices d'évaluation autonome, répondez obligatoirement aux trois questions ci-dessous
+      par un entier de <strong>0</strong> (pas du tout) à <strong>10</strong> (tout à fait).
+    </p>
+
+    <div id="phase2-timer-alert" class="callout callout-warn hidden" role="status">
+      La minute recommandée pour l'autoévaluation est écoulée. Veuillez compléter les trois réponses puis démarrer l'évaluation autonome.
+    </div>
+
+    <form id="self-eval-form" novalidate>
+      <div id="self-eval-questions"></div>
+      <div id="self-eval-error" class="callout callout-err hidden" role="alert"></div>
+      <div class="actions-row">
+        <button type="submit" class="btn btn-primary" id="btn-start-phase3">
+          Valider l'autoévaluation et démarrer la phase 3 (7 min)
+        </button>
+      </div>
+    </form>
+  </section>
+
+  <!-- PHASE 3 : ÉVALUATION AUTONOME (7 MIN) -->
+  <section id="phase-3" class="hidden" aria-labelledby="h-phase-3">
+    <div class="callout callout-warn" role="region" aria-label="Consignes strictes de l'évaluation autonome">
+      <strong>Consignes de la phase 3 — Travail strictement autonome (7 minutes) :</strong>
+      <ul style="margin: 0.4rem 0 0.4rem 1.2rem;">
+        <li>Fermez immédiatement toute IA externe et tout document.</li>
+        <li>Ne consultez aucun aide-mémoire ni note ; travaillez seul(e).</li>
+        <li>Aucun bouton « Tester » ni retour de correction n'est disponible avant la remise.</li>
+      </ul>
+      <p class="help-text" style="margin: 0;">
+        Note : ce site étant statique, il ne verrouille pas les autres onglets ; le respect des consignes repose sur le cadre de la séance.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2 id="h-phase-3">3. Évaluation autonome (4 exercices)</h2>
+      <p class="help-text">
+        Pour E1, E3 et E4 : saisissez uniquement le motif d'expression régulière (sans <code>/.../</code> ni flags),
+        en correspondance complète sur la chaîne entière, caractères ASCII. Vos saisies sont enregistrées localement au fil de la frappe.
+      </p>
+
+      <!-- E1 -->
+      <article class="card" style="box-shadow: none; background: var(--surface-alt);">
+        <h3 id="eval-e1-title">E1 — Production</h3>
+        <p id="eval-e1-prompt"></p>
+        <div class="examples-grid">
+          <div class="example-box" style="background: var(--surface);">
+            <h4>Acceptés</h4>
+            <ul class="example-list" id="eval-e1-accept"></ul>
+          </div>
+          <div class="example-box" style="background: var(--surface);">
+            <h4>Refusés</h4>
+            <ul class="example-list" id="eval-e1-reject"></ul>
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label" for="eval-e1-input">Votre expression régulière pour E1 :</label>
+          <input
+            type="text"
+            id="eval-e1-input"
+            class="input-mono"
+            maxlength="200"
+            autocomplete="off"
+            autocorrect="off"
+            autocapitalize="off"
+            spellcheck="false"
+            placeholder="Saisissez le motif pour E1"
+          >
+          <div class="help-text" id="eval-e1-count">0 / 200 caractères</div>
+        </div>
+      </article>
+
+      <!-- E2 -->
+      <article class="card" style="box-shadow: none; background: var(--surface-alt);">
+        <h3 id="eval-e2-title">E2 — Compréhension</h3>
+        <p id="eval-e2-prompt"></p>
+        <p>Expression à analyser : <code id="eval-e2-pattern" style="font-size: 1.05rem;"></code></p>
+        <div class="data-table-wrap">
+          <table class="data-table" style="background: var(--surface);">
+            <thead>
+              <tr>
+                <th>Chaîne testée</th>
+                <th>Acceptée (Oui)</th>
+                <th>Refusée (Non)</th>
+              </tr>
+            </thead>
+            <tbody id="eval-e2-tbody"></tbody>
+          </table>
+        </div>
+      </article>
+
+      <!-- E3 -->
+      <article class="card" style="box-shadow: none; background: var(--surface-alt);">
+        <h3 id="eval-e3-title">E3 — Correction et explication</h3>
+        <p id="eval-e3-prompt"></p>
+        <p>Motif initial erroné : <code id="eval-e3-buggy" style="font-size: 1.05rem;"></code></p>
+        <div class="form-group">
+          <label class="form-label" for="eval-e3-pattern">1. Motif corrigé :</label>
+          <input
+            type="text"
+            id="eval-e3-pattern"
+            class="input-mono"
+            maxlength="200"
+            autocomplete="off"
+            autocorrect="off"
+            autocapitalize="off"
+            spellcheck="false"
+            placeholder="Saisissez le motif corrigé"
+          >
+          <div class="help-text" id="eval-e3-count">0 / 200 caractères</div>
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label" for="eval-e3-explanation">2. Explication libre de l'erreur dans le motif initial (évaluée séparément par l'enseignant) :</label>
+          <textarea
+            id="eval-e3-explanation"
+            class="textarea-field"
+            maxlength="1000"
+            placeholder="Expliquez en quelques lignes pourquoi le motif initial ne correspond pas à la consigne."
+          ></textarea>
+        </div>
+      </article>
+
+      <!-- E4 -->
+      <article class="card" style="box-shadow: none; background: var(--surface-alt);">
+        <h3 id="eval-e4-title">E4 — Transfert</h3>
+        <p id="eval-e4-prompt"></p>
+        <div class="examples-grid">
+          <div class="example-box" style="background: var(--surface);">
+            <h4>Acceptés</h4>
+            <ul class="example-list" id="eval-e4-accept"></ul>
+          </div>
+          <div class="example-box" style="background: var(--surface);">
+            <h4>Refusés</h4>
+            <ul class="example-list" id="eval-e4-reject"></ul>
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label" for="eval-e4-input">Votre expression régulière pour E4 :</label>
+          <input
+            type="text"
+            id="eval-e4-input"
+            class="input-mono"
+            maxlength="200"
+            autocomplete="off"
+            autocorrect="off"
+            autocapitalize="off"
+            spellcheck="false"
+            placeholder="Saisissez le motif pour E4"
+          >
+          <div class="help-text" id="eval-e4-count">0 / 200 caractères</div>
+        </div>
+      </article>
+
+      <div class="actions-row" style="justify-content: flex-end;">
+        <button type="button" class="btn btn-primary" id="btn-submit-phase3">
+          Remettre définitivement mes réponses
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- PHASE 4 : REMISE ET TÉLÉCHARGEMENT -->
+  <section id="phase-4" class="card hidden" aria-labelledby="h-phase-4">
+    <h2 id="h-phase-4">4. Remise enregistrée — Export des résultats</h2>
+    <div class="callout callout-ok">
+      <strong>Vos réponses sont définitivement verrouillées.</strong> Aucune modification n'est plus possible pour cette tentative.
+      La correction détaillée sera présentée par l'enseignant lors de la mise en commun.
+    </div>
+
+    <div id="summary-meta" class="callout"></div>
+
+    <h3>Télécharger votre fichier anonyme</h3>
+    <p>
+      Ce site ne réalise aucune transmission réseau automatique. Téléchargez le fichier <strong>JSON</strong> ci-dessous
+      et remettez-le à l'enseignant selon la modalité indiquée en séance (dépôt Moodle, partage local, etc.).
+    </p>
+    <div class="actions-row">
+      <button type="button" class="btn btn-primary" id="btn-download-json">Télécharger le résultat (JSON — pour l'enseignant)</button>
+      <button type="button" class="btn" id="btn-download-csv">Télécharger le résultat (CSV)</button>
+    </div>
+
+    <div class="callout" style="margin-top: 1.25rem;">
+      <strong>Précisions méthodologiques :</strong>
+      <ul style="margin: 0.4rem 0 0 1.2rem;">
+        <li>L'évaluation automatique repose sur des jeux de tests finis : réussir les tests ne prouve pas formellement l'équivalence de deux langages réguliers.</li>
+        <li>L'explication écrite de E3 est conservée dans l'export pour une évaluation manuelle séparée (sans modifier le score automatique /4).</li>
+        <li>Les scores de la phase 1 et de la phase 3 portent sur des tâches et conditions différentes : leur écart ne constitue pas une mesure causale directe.</li>
+      </ul>
+    </div>
+
+    <div class="actions-row" style="margin-top: 1.25rem;">
+      <button type="button" class="btn btn-danger" id="btn-reset-bottom">Effacer la session locale et recommencer</button>
+    </div>
+  </section>
+{{ end }}
+
+{{ define "scripts" }}
+  <script src="./exercises.js"></script>
+  <script src="./app.js"></script>
+{{ end }}

@@ -1,0 +1,11 @@
+baseURL = "https://nherbaut.github.io/regex-ai/"
+locale = "fr-FR"
+defaultContentLanguage = "fr"
+title = "Expérience pédagogique — Expressions régulières"
+relativeURLs = false
+canonifyURLs = false
+disableKinds = ["taxonomy", "term", "rss", "sitemap"]
+
+[params]
+  description = "Activité pédagogique de 20 minutes en BUT Informatique (S1) comparant trois modalités d'apprentissage des expressions régulières."
+  author = "Équipe pédagogique — BUT Informatique"

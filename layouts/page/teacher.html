@@ -1,0 +1,216 @@
+{{ define "main" }}
+  <section class="status-bar" aria-label="Outils de restitution enseignant">
+    <div class="status-meta">
+      <strong>Interface enseignant — Restitution (5 min)</strong>
+      <span class="badge badge-accent" id="teacher-count-badge">0 tentative chargée</span>
+      <span class="badge badge-warn hidden" id="teacher-demo-badge">MODE DÉMONSTRATION</span>
+    </div>
+    <div class="actions-row" style="margin-top: 0;">
+      <div class="timer-box" id="teacher-timer-box" aria-label="Chronomètre de restitution">
+        <span id="teacher-timer-display">05:00</span>
+      </div>
+      <button type="button" class="btn btn-small" id="btn-teacher-timer-toggle">Démarrer</button>
+      <button type="button" class="btn btn-small" id="btn-teacher-timer-reset">Remettre à 5 min</button>
+      <button type="button" class="btn btn-small btn-primary" id="btn-projection-toggle" aria-pressed="false">
+        Mode projection
+      </button>
+    </div>
+  </section>
+
+  <div id="demo-banner" class="callout callout-warn hidden" role="status">
+    <strong>Mode démonstration actif (données fictives) :</strong>
+    les statistiques affichées ci-dessous proviennent d'un jeu synthétique destiné uniquement à présenter l'interface.
+    Elles ne sont jamais mélangées avec des exports étudiants réels.
+    <button type="button" class="btn btn-small" id="btn-exit-demo" style="margin-left: 0.75rem;">
+      Quitter le mode démonstration
+    </button>
+  </div>
+
+  <!-- IMPORT DES EXPORTS ÉTUDIANTS -->
+  <section class="card hide-in-projection" aria-labelledby="h-import">
+    <h2 id="h-import">1. Import local des résultats étudiants (JSON)</h2>
+    <p class="help-text" style="margin-top: 0;">
+      Les fichiers JSON sont collectés manuellement auprès des étudiants (le stockage local <code>localStorage</code>
+      n'est <strong>jamais partagé entre machines</strong>). Vous pouvez importer plusieurs fichiers individuels simultanément
+      ou un fichier JSON regroupé exporté précédemment. Les doublons sont automatiquement détectés par identifiant de tentative.
+    </p>
+
+    <div id="import-drop-zone" class="drop-zone">
+      <p style="margin-top: 0;"><strong>Glissez-déposez un ou plusieurs fichiers JSON ici</strong></p>
+      <p class="help-text">ou sélectionnez-les depuis votre ordinateur :</p>
+      <input type="file" id="import-file-input" accept=".json,application/json" multiple aria-label="Sélectionner des fichiers JSON étudiants">
+    </div>
+
+    <div class="actions-row">
+      <button type="button" class="btn" id="btn-load-demo">Charger le jeu de démonstration (fictif)</button>
+      <button type="button" class="btn" id="btn-export-group-csv" disabled>Exporter CSV agrégé par groupe</button>
+      <button type="button" class="btn" id="btn-export-indiv-csv" disabled>Exporter CSV individuel</button>
+      <button type="button" class="btn" id="btn-export-bundle-json" disabled>Exporter JSON regroupé</button>
+      <button type="button" class="btn btn-danger" id="btn-clear-all-data" disabled>Vider les données chargées</button>
+    </div>
+
+    <div id="import-report" class="callout hidden" aria-live="polite"></div>
+  </section>
+
+  <!-- SYNTHÈSE AGRÉGÉE PAR GROUPE -->
+  <section class="card" id="teacher-summary-card" aria-labelledby="h-summary">
+    <h2 id="h-summary">2. Résultats descriptifs par groupe</h2>
+    <p class="help-text" style="margin-top: 0;">
+      Les valeurs absentes (groupe vide ou donnée non renseignée) sont indiquées par <strong>« — »</strong> et distinguées des zéros (<strong>0</strong>).
+      Les scores d'apprentissage (/3) et d'évaluation autonome (/4) portent sur des exercices et conditions différents :
+      leur comparaison est strictement descriptive et ne permet pas d'inférence causale directe.
+    </p>
+
+    <div class="data-table-wrap">
+      <table class="data-table" id="group-stats-table">
+        <thead>
+          <tr>
+            <th>Groupe</th>
+            <th class="num">Effectif (n)</th>
+            <th>Familiarité préalable (J / N / R)</th>
+            <th class="num">Apprentissage moy. (/3 ; %)</th>
+            <th class="num">Éval. autonome moy. (/4 ; %)</th>
+            <th class="num">Autoéval. moy. /10 (C / A / E)</th>
+            <th class="num">Écart indicatif autonomie*</th>
+          </tr>
+        </thead>
+        <tbody id="group-stats-tbody"></tbody>
+      </table>
+    </div>
+    <p class="help-text">
+      Légende : Familiarité <strong>J</strong> = Jamais, <strong>N</strong> = Quelques notions, <strong>R</strong> = Utilisation régulière.
+      Autoévaluation <strong>C</strong> = Compréhension, <strong>A</strong> = Autonomie estimée, <strong>E</strong> = Capacité d'explication.
+      *Écart indicatif = autoévaluation d'autonomie (/10) − score autonome ramené sur /10 (positif = estimation supérieure au score observé ; comparaison indicative uniquement).
+    </p>
+
+    <h3>Détail moyen par exercice (%) et note manuelle E3</h3>
+    <div class="data-table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Groupe</th>
+            <th class="num">A1 (%)</th>
+            <th class="num">A2 (%)</th>
+            <th class="num">A3 (%)</th>
+            <th class="num">E1 (%)</th>
+            <th class="num">E2 (%)</th>
+            <th class="num">E3 motif (%)</th>
+            <th class="num">E4 (%)</th>
+            <th class="num">E3 explication (/1, manuelle)</th>
+          </tr>
+        </thead>
+        <tbody id="exercise-stats-tbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- GRAPHIQUES SIMPLES SVG -->
+  <section class="card" id="teacher-charts-card" aria-labelledby="h-charts">
+    <h2 id="h-charts">3. Graphiques de synthèse</h2>
+    <div class="charts-grid">
+      <div class="chart-card">
+        <h3>Apprentissage (%) et Évaluation autonome (%) par groupe</h3>
+        <p class="help-text" style="margin-top: 0;">Tâches et conditions distinctes : lecture descriptive uniquement.</p>
+        <div id="chart-phase-comparison"></div>
+      </div>
+
+      <div class="chart-card">
+        <h3>Autoévaluation autonomie (/10) vs Score autonome ramené à /10</h3>
+        <p class="help-text" style="margin-top: 0;">Comparaison indicative par groupe.</p>
+        <div id="chart-calibration"></div>
+      </div>
+
+      <div class="chart-card" style="grid-column: 1 / -1;">
+        <h3>Réussite moyenne par exercice (%) selon le groupe</h3>
+        <p class="help-text" style="margin-top: 0;">A1–A3 : phase d'apprentissage avec assistance ; E1–E4 : évaluation autonome.</p>
+        <div id="chart-exercises"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- NOTATION MANUELLE E3 & LISTE DES TENTATIVES -->
+  <section class="card hide-in-projection" aria-labelledby="h-attempts">
+    <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem;">
+      <h2 id="h-attempts" style="margin-bottom: 0;">4. Tentatives individuelles et notation manuelle des explications E3</h2>
+      <label style="display: inline-flex; align-items: center; gap: 0.5rem;">
+        <span>Filtrer par groupe :</span>
+        <select id="filter-group-select" style="width: auto;">
+          <option value="ALL">Tous les groupes</option>
+          <option value="A">Groupe A</option>
+          <option value="B">Groupe B</option>
+          <option value="C">Groupe C</option>
+        </select>
+      </label>
+    </div>
+    <p class="help-text">
+      La notation manuelle de l'explication E3 (Non évaluée, 0, 0,5 ou 1) est enregistrée séparément et
+      <strong>ne modifie pas le total automatique /4</strong>.
+    </p>
+    <div class="data-table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Identifiant</th>
+            <th>Groupe</th>
+            <th>Familiarité</th>
+            <th class="num">Appr. /3</th>
+            <th class="num">Éval. /4</th>
+            <th>E3 — Motif soumis</th>
+            <th>E3 — Explication libre</th>
+            <th>Note manuelle E3</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="attempts-list-tbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- CORRIGÉ SUR ACTION VOLONTAIRE -->
+  <section class="card" id="solutions-card" aria-labelledby="h-solutions">
+    <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem;">
+      <h2 id="h-solutions" style="margin-bottom: 0;">5. Corrigé de référence (accès volontaire après la séance)</h2>
+      <button type="button" class="btn btn-primary" id="btn-toggle-solutions" aria-expanded="false" aria-controls="solutions-content">
+        Afficher le corrigé de référence
+      </button>
+    </div>
+    <p class="help-text">
+      Masqué par défaut pour éviter toute révélation involontaire lors d'une projection.
+      Toute expression équivalente passant l'ensemble des tests est acceptée automatiquement.
+    </p>
+    <div id="solutions-content" class="hidden"></div>
+  </section>
+
+  <!-- DÉROULÉ PÉDAGOGIQUE ET BIAIS -->
+  <section class="card" id="pedagogy-card" aria-labelledby="h-pedagogy">
+    <h2 id="h-pedagogy">6. Déroulé pédagogique (20 min) et biais méthodologiques à discuter</h2>
+    <div class="grid-2">
+      <div>
+        <h3>Déroulé de la séance</h3>
+        <ol>
+          <li><strong>Accueil (avant top départ)</strong> : distribution des groupes A, B, C, lecture des consignes, choix de la familiarité préalable.</li>
+          <li><strong>Phase 1 — Apprentissage (7 min)</strong> : exercices A1, A2, A3 avec rétroaction immédiate (« Tester ») selon la modalité du groupe (A : IA libre ; B : aide-mémoire seul ; C : IA tuteur sans solution complète).</li>
+          <li><strong>Phase 2 — Autoévaluation (1 min)</strong> : trois jugements sur 10 avant révélation de la phase 3.</li>
+          <li><strong>Phase 3 — Évaluation autonome (7 min)</strong> : exercices E1 à E4 sans assistance ni rétroaction (ou sur feuille papier imprimable).</li>
+          <li><strong>Restitution collective (5 min)</strong> : collecte manuelle des JSON, observation descriptive des résultats, correction collective (notamment E2 et priorité de <code>|</code> dans E3) et discussion des biais.</li>
+        </ol>
+      </div>
+      <div>
+        <h3>Limites et biais à expliciter avec les étudiants</h3>
+        <ul>
+          <li><strong>Connaissances antérieures</strong> : la familiarité préalable avec les regex varie entre étudiants et peut déséquilibrer les groupes.</li>
+          <li><strong>Taille et équilibre des groupes</strong> : sur un petit effectif (un groupe de TD ou amphi), les moyennes sont très sensibles à quelques copies.</li>
+          <li><strong>Respect effectif des consignes</strong> : en autonomie sur navigateur, un site statique ne bloque pas d'autres onglets ni n'empêche d'inspecter le code source.</li>
+          <li><strong>Différence de tâches et de rétroaction</strong> : la phase 1 offre des essais illimités avec retour (« Tester »), contrairement à la phase 3 qui comporte des tâches nouvelles (compréhension, débogage, transfert).</li>
+          <li><strong>Absence de mesure de rétention</strong> : cette séance mesure une performance immédiate. <strong>Piste conseillée :</strong> proposer un court test différé sans assistance lors du cours suivant pour observer la mémorisation à moyen terme.</li>
+          <li><strong>Limites techniques</strong> : le test par exemples finis ne prouve pas formellement l'équivalence de deux langages réguliers.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+{{ end }}
+
+{{ define "scripts" }}
+  <script src="./exercises.js"></script>
+  <script src="./teacher.js"></script>
+{{ end }}

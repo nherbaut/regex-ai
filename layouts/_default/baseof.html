@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ if .IsHome }}{{ .Site.Title }}{{ else }}{{ .Title }} — {{ .Site.Title }}{{ end }}</title>
+  <meta name="description" content="{{ with .Description }}{{ . }}{{ else }}{{ .Site.Params.description }}{{ end }}">
+  <link rel="stylesheet" href="./styles.css">
+  {{ block "head" . }}{{ end }}
+</head>
+<body class="{{ block "body_class" . }}{{ end }}">
+  <a class="skip-link" href="#contenu-principal">Aller au contenu principal</a>
+
+  <header class="site-header no-print">
+    <div class="header-inner">
+      <div>
+        <h1 class="site-title">{{ .Site.Title }}</h1>
+        <p class="site-subtitle">BUT Informatique — Semestre 1 — Séance de 20 minutes (hors ligne, anonyme)</p>
+      </div>
+      <nav class="header-nav" aria-label="Navigation principale">
+        <a href="./index.html"{{ if .IsHome }} aria-current="page"{{ end }}>Parcours étudiant</a>
+        <a href="./teacher.html"{{ if eq .Layout "teacher" }} aria-current="page"{{ end }}>Interface enseignant</a>
+        <a href="./papier.html"{{ if eq .Layout "papier" }} aria-current="page"{{ end }}>Version papier (Phase 3)</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="contenu-principal" class="main-container">
+    {{ block "main" . }}{{ end }}
+  </main>
+
+  <footer class="site-footer no-print">
+    <div class="footer-inner">
+      <span>Site statique autonome — aucune requête réseau, aucune donnée nominative.</span>
+      <span>Sauvegarde locale dans votre navigateur (<code>localStorage</code>) uniquement.</span>
+    </div>
+  </footer>
+
+  {{ block "scripts" . }}{{ end }}
+</body>
+</html>
